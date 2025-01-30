@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startBtn = document.getElementById('start-btn');
     const stopBtn = document.getElementById('stop-btn');
     const retryBtn = document.getElementById('retry-btn');
+    const instructionsBtn = document.getElementById('instructions-btn');
     const timeDisplay = document.getElementById('time');
     const wpmDisplay = document.getElementById('wpm');
 
@@ -17,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let startTime;
     let interval;
+    let isStarted = false;
 
     difficultySelect.addEventListener('change', (event) => {
         const selectedDifficulty = event.target.value;
@@ -24,19 +26,44 @@ document.addEventListener('DOMContentLoaded', () => {
         levelDisplay.innerText = selectedDifficulty.charAt(0).toUpperCase() + selectedDifficulty.slice(1);
     });
 
-    startBtn.addEventListener('click', () => {
-        userInput.value = '';
-        userInput.disabled = false;
-        userInput.focus();
-        startTime = new Date().getTime();
-        interval = setInterval(() => {
-            const currentTime = new Date().getTime();
-            const elapsedTime = Math.floor((currentTime - startTime) / 1000);
-            timeDisplay.innerText = elapsedTime;
-        }, 1000);
+    userInput.addEventListener('input', () => {
+        if (!isStarted) {
+            isStarted = true;
+            startTime = new Date().getTime();
+            interval = setInterval(() => {
+                const currentTime = new Date().getTime();
+                const elapsedTime = Math.floor((currentTime - startTime) / 1000);
+                timeDisplay.innerText = elapsedTime;
+            }, 1000);
+        }
+    });
+
+    userInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            stopTest();
+        }
     });
 
     stopBtn.addEventListener('click', () => {
+        stopTest();
+    });
+
+    retryBtn.addEventListener('click', () => {
+        userInput.value = '';
+        userInput.disabled = false;
+        clearInterval(interval);
+        timeDisplay.innerText = '0';
+        wpmDisplay.innerText = '0';
+        isStarted = false;
+    });
+
+    instructionsBtn.addEventListener('click', () => {
+        const instructionsModal = new bootstrap.Modal(document.getElementById('instructions-modal'));
+        instructionsModal.show();
+    });
+
+    function stopTest() {
         clearInterval(interval);
         userInput.disabled = true;
         const elapsedTime = Math.floor((new Date().getTime() - startTime) / 1000);
@@ -53,13 +80,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const wpm = Math.round((correctWords / elapsedTime) * 60);
         wpmDisplay.innerText = wpm;
-    });
-
-    retryBtn.addEventListener('click', () => {
-        userInput.value = '';
-        userInput.disabled = true;
-        clearInterval(interval);
-        timeDisplay.innerText = '0';
-        wpmDisplay.innerText = '0';
-    });
+    }
 });
